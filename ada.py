@@ -75,42 +75,43 @@ def log_images(img, depth, pred, config1, step):
         }, step=step)
 
 
-def main_worker(gpu, ngpus_per_node, config1,img,depth,train_data_loader, val_data_loader):
+def main_worker(gpu, ngpus_per_node, config1, img, depth, train_data_loader, val_data_loader):
+    # 32GBメモリ制限
+    import torch
+    if torch.cuda.is_available():
+        torch.cuda.set_per_process_memory_fraction(0.9, 0)
+        torch.cuda.set_per_process_memory_fraction(
+            31000 / (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024)), 0
+        )
+
     config1["gpu"] = gpu
-    if config1["flag"] :
+    if config1["flag"]:
+        modelada = models.UnetAdaptiveBins.build(
+            n_bins=config1["n_bins"],
+            min_val=config1["min_depth"],
+            max_val=config1["max_depth"],
+            norm=config1["norm"]
+        )
 
-        modelada = models.UnetAdaptiveBins.build(n_bins=config1["n_bins"], min_val=config1["min_depth"], max_val=config1["max_depth"],
-                                              norm=config1["norm"])
-
-  
-        if config1["gpu"] is not None: 
+        if config1["gpu"] is not None:
             torch.cuda.set_device(config1["gpu"])
             modelada = modelada.cuda(config1["gpu"])
-
-        config1["multigpu"] = False
-        if config1["distributed"]:
-
-            update_yaml(config1,"multigpu", True)
-            update_yaml(config1, "gpu", 0)
-            update_yaml(config1,"rank", config1["rank"] * ngpus_per_node + config1["gpu"])
-
-            update_yaml(config1,"batch_size", int(config1["bs"] / ngpus_per_node) )
-
-            update_yaml(config1,"workers", int((config1["num_workers"] + ngpus_per_node - 1) / ngpus_per_node) )
-            print(config1["gpu"], config1["rank"], config1["bs"], config1["workers"])
-            torch.cuda.set_device(config1["gpu"])
-            modelada = nn.SyncBatchNorm.convert_sync_batchnorm(modelada)
-            modelada = modelada.cuda(config1["gpu"])
-            modelada = torch.nn.parallel.DistributedDataParallel(modelada, device_ids=[config1["gpu"]], output_device=config1["gpu"],
-                                                              find_unused_parameters=True)
-
-        elif config1["gpu"] is None:
-            update_yaml(config1,"multigpu" ,True)
+        else:
             modelada = modelada.cuda()
-            modelada = torch.nn.DataParallel(modelada)
+
+        # 分散処理関連の設定を削除
+        config1["multigpu"] = False
+
+        # DataParallel/DistributedDataParallelの削除
+        # update_yaml(config1,"multigpu" ,True)
+        # modelada = modelada.cuda()
+        # modelada = torch.nn.DataParallel(modelada)
+        # modelada = nn.SyncBatchNorm.convert_sync_batchnorm(modelada)
+        # modelada = torch.nn.parallel.DistributedDataParallel(...)
+
         update_yaml(config1, "flag", False)
-    update_yaml(config1,"epoch", 0)
-    update_yaml(config1,"last_epoch",-1)
+    update_yaml(config1, "epoch", 0)
+    update_yaml(config1, "last_epoch", -1)
     disparity_array,lossada = trainada(modelada, config1, img=img, depth=depth,train_data_loader=train_data_loader, test_data_loader=val_data_loader,epochs=config1["epochs"], lr=config1["lr"], device=config1["gpu"], root=config1["root"],
           experiment_name=config1["name"], optimizer_state_dict=None)
     return disparity_array,lossada
