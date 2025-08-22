@@ -25,12 +25,17 @@ parser.add_argument("--version", type=str, default="experiments")
 parser.add_argument("--extra_config", type=str, default="{}", required=False)
 parser.add_argument("--local_rank", default=0, type=int,
                     help="node rank for distributed training")
+# バッチサイズを変更するコマンドライン引数
+# これを使うと、configファイルのdata.per_gpu_batch_sizeを上書きできます
+# 例: --batch_size 32
+# もし指定しない場合は、configファイルの値が使われます
+parser.add_argument("--batch_size", type=int, default=None, help="Override per_gpu_batch_size")
 args = parser.parse_args()
 
 
 local_rank = int(args.local_rank)
 
- 
+ # Load config
 default_config_path = os.path.join(os.path.dirname(args.config_path), "params_default.yaml")
 with open(default_config_path, "r") as f:
     config = yaml.safe_load(f)
@@ -47,28 +52,35 @@ with open(args.config_path, "r") as f:
     for k in extra_config.keys():
         assert k in config, k
     config.update(extra_config)
-synthesis_task = SynthesisTask(config=config, logger=0)
- 
-tmp_config_path = os.path.join(os.path.dirname(args.config_path), "params_tmp.yaml")
-if local_rank == 0:
-    with open(tmp_config_path, "w") as f:
-        print("Dumping extra config file...")
-        yaml.dump(config, f)
 
- 
+# バッチサイズの上書き
+if args.batch_size is not None:
+    config["data.per_gpu_batch_size"] = args.batch_size
+
+synthesis_task = SynthesisTask(config=config, logger=0)
+
+# save the config
+tmp_config_path = os.path.join(os.path.dirname(args.config_path), "params_tmp.yaml")
+with open(tmp_config_path, "w") as f:
+    print("Dumping extra config file...")
+    yaml.dump(config, f)
+
+# Use only a single GPU (first one specified) 
 config["training.gpus"] = [int(s) for s in str(config["training.gpus"]).split(",")]
 config["lr.decay_steps"] = [int(s) for s in str(config["lr.decay_steps"]).split(",")]
 config["current_epoch"] = 0
+config["global_rank"] = 0
+config["local_rank"] = 0
+config["world_size"] = 1
 
  
-gpus = config["training.gpus"][local_rank]
-os.environ["CUDA_VISIBLE_DEVICES"] = str(gpus)
+# Set CUDA_VISIBLE_DEVICES to use only one GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = str(config["training.gpus"][0])
 
- 
-dist.init_process_group(backend="nccl")
-world_size = dist.get_world_size()
-global_rank = dist.get_rank()
-config["global_rank"] = global_rank
+# Set PyTorch GPU memory limit (32GB = 32768MB)
+if torch.cuda.is_available():
+    torch.cuda.set_per_process_memory_fraction(0.9, 0)
+    torch.cuda.set_per_process_memory_fraction(31000 / (torch.cuda.get_device_properties(0).total_memory / (1024 * 1024)), 0)
 
 
 def get_dataset(config, logger):
