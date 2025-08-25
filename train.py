@@ -140,39 +140,31 @@ def get_dataset(config, logger):
 
 
 def train():
-    config["local_rank"] = local_rank
-    config["world_size"] = world_size
-
-     
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.enabled = True
 
-     
     logger = None
-    if global_rank == 0:
-        import logging
-         
-        config["log_file"] = "./training.log" \
-            if args.workspace.startswith("hdfs") \
-            else os.path.join(args.workspace, args.version, "training.log")
-        logger = logging.getLogger("sampling")
-        file_handler = logging.FileHandler(config["log_file"])
-        stream_handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter("[%(asctime)s %(filename)s] %(message)s")
-        file_handler.setFormatter(formatter)
-        stream_handler.setFormatter(formatter)
-        logger.handlers = [file_handler, stream_handler]
-        logger.setLevel(logging.INFO)
-        logger.propagate = False
+    # 分散処理を完全に無効化
+    # ログやTensorBoardはrank 0のみで十分
+    import logging
+    config["log_file"] = os.path.join(args.workspace, args.version, "training.log")
+    logger = logging.getLogger("sampling")
+    file_handler = logging.FileHandler(config["log_file"])
+    stream_handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter("[%(asctime)s %(filename)s] %(message)s")
+    file_handler.setFormatter(formatter)
+    stream_handler.setFormatter(formatter)
+    logger.handlers = [file_handler, stream_handler]
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
 
-        logger.info("Training config: {}".format(config))
+    logger.info("Training config: {}".format(config))
+    config["tb_writer"] = SummaryWriter(log_dir=config["local_workspace"])
 
-         
-        config["tb_writer"] = SummaryWriter(log_dir=config["local_workspace"])
     config["logger"] = logger
 
-     
-     
+    train_data_loader, val_data_loader = get_dataset(config, logger)
+
     synthesis_task = SynthesisTask(config=config, logger=logger)
     synthesis_task.train(train_data_loader, val_data_loader)
 
