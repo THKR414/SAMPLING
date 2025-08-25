@@ -17,7 +17,7 @@ from utils import run_shell_cmd
 
  
 parser = argparse.ArgumentParser(description="Training")
-parser.add_argument("--config_path", default="./params_kitti_raw.yaml", type=str)
+parser.add_argument("--config_path", default="./configs/params_kitti_raw.yaml", type=str)
 '''parser.add_argument("--workspace", type=str, required=True)
 parser.add_argument("--version", type=str, required=True)'''
 parser.add_argument("--workspace", type=str, default="./")
