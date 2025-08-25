@@ -77,12 +77,12 @@ class SynthesisTask():
         self.decoder = DepthDecoder(
     
                 num_ch_enc=self.backbone.num_ch_enc,
-                use_alpha=config.get("mpi.use_alpha", False),
+                # use_alpha=config.get("mpi.use_alpha", False),
                 num_output_channels=4,
                 scales=range(4),
                 use_skips=True,
-                embedder=self.embedder,
-                embedder_out_dim=out_dim,
+                # embedder=self.embedder,
+                # embedder_out_dim=out_dim,
         ).to(device=torch.device("cuda:0"))
         print("pan", self.pan)
         print("mnet", self.mnet)
