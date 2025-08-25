@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 import torch.distributed as dist
 from torch.utils.tensorboard import SummaryWriter
 
-from Sampling.synthesis_task_kitti import SynthesisTask
+from synthesis_task_kitti import SynthesisTask
 from utils import run_shell_cmd
 
  
