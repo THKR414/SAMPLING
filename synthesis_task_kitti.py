@@ -546,8 +546,8 @@ class SynthesisTask():
             value.update(loss_dict[key].item())
 
     def train_epoch(self, train_data_loader, val_data_loader, epoch):
-        if hasattr(train_data_loader, "sampler"):
-            train_data_loader.sampler.set_epoch(epoch)
+        # if hasattr(train_data_loader, "sampler"):
+        #     train_data_loader.sampler.set_epoch(epoch)
         self.train_data_loader = train_data_loader
         self.val_data_loader = val_data_loader
         self.backbone.train()
