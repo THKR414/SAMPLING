@@ -6,9 +6,9 @@ data.num_seq_per_gpu: 4
 data.per_gpu_batch_size: 32
 
 data.num_tgt_views: 1
-data.training_set_path: home/m_vcl/kitti/
+data.training_set_path: /home/m_vcl/kitti/
 
-data.val_set_path: home/m_vcl/kitti/
+data.val_set_path: /home/m_vcl/kitti/
 data.visible_point_count: 256 
 data.num_workers: 4
 
