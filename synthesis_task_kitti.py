@@ -111,20 +111,20 @@ class SynthesisTask():
                           logger=logger)
 
         if not is_val:
-            process_group = torch.distributed.new_group(range(dist.get_world_size()))
-            self.backbone = nn.SyncBatchNorm.convert_sync_batchnorm(self.backbone, process_group)
-            self.backbone = DDP(self.backbone, find_unused_parameters=True)
+            # 分散学習を完全にオフ
+            # self.backbone = nn.SyncBatchNorm.convert_sync_batchnorm(self.backbone, process_group)
+            # self.backbone = DDP(self.backbone, find_unused_parameters=True)
             self.backbone.train()
 
-            self.decoder = nn.SyncBatchNorm.convert_sync_batchnorm(self.decoder, process_group)
-            self.decoder = DDP(self.decoder, find_unused_parameters=True)
+            # self.decoder = nn.SyncBatchNorm.convert_sync_batchnorm(self.decoder, process_group)
+            # self.decoder = DDP(self.decoder, find_unused_parameters=True)
             self.decoder.train()
 
-            self.pan = nn.SyncBatchNorm.convert_sync_batchnorm(self.pan, process_group)
-            self.pan = DDP(self.pan, find_unused_parameters=True)
+            # self.pan = nn.SyncBatchNorm.convert_sync_batchnorm(self.pan, process_group)
+            # self.pan = DDP(self.pan, find_unused_parameters=True)
             self.pan.train()
-            self.mnet = nn.SyncBatchNorm.convert_sync_batchnorm(self.mnet, process_group)
-            self.mnet = DDP(self.mnet, find_unused_parameters=True)
+            # self.mnet = nn.SyncBatchNorm.convert_sync_batchnorm(self.mnet, process_group)
+            # self.mnet = DDP(self.mnet, find_unused_parameters=True)
             self.mnet.train()
             self.lr_scheduler = optim.lr_scheduler.MultiStepLR(self.optimizer,
                                                                config["lr.decay_steps"],

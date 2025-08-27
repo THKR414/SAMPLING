@@ -57,8 +57,6 @@ with open(args.config_path, "r") as f:
 if args.batch_size is not None:
     config["data.per_gpu_batch_size"] = args.batch_size
 
-synthesis_task = SynthesisTask(config=config, logger=0)
-
 # save the config
 tmp_config_path = os.path.join(os.path.dirname(args.config_path), "params_tmp.yaml")
 with open(tmp_config_path, "w") as f:
@@ -73,6 +71,7 @@ config["global_rank"] = 0
 config["local_rank"] = 0
 config["world_size"] = 1
 
+synthesis_task = SynthesisTask(config=config, logger=0)
  
 # Set CUDA_VISIBLE_DEVICES to use only one GPU
 os.environ["CUDA_VISIBLE_DEVICES"] = str(config["training.gpus"][0])
@@ -179,7 +178,7 @@ def main():
             os.makedirs(workspace)
         config["local_workspace"] = workspace
         shutil.copy(tmp_config_path, os.path.join(workspace, "params.yaml"))
-    dist.barrier()
+    # dist.barrier()
 
      
     train()
