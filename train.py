@@ -83,7 +83,6 @@ if torch.cuda.is_available():
 
 
 def get_dataset(config, logger):
-     
     assert config["data.name"] in ["kitti_raw", "TT"]
 
     if config["data.name"] == "kitti_raw":
@@ -93,12 +92,10 @@ def get_dataset(config, logger):
                                     root=config["data.training_set_path"],
                                     is_validation=False,
                                     img_size=(config["data.img_w"], config["data.img_h"]))
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-         
+        # DistributedSamplerは使わずshuffle=True
         train_data_loader = DataLoader(train_dataset, batch_size=config["data.per_gpu_batch_size"],
                                        drop_last=True, num_workers=0,
-                                       sampler=train_sampler)
-                                     
+                                       shuffle=True)
 
         val_dataset = NeRFDataset(config,
                                   logger,
@@ -107,7 +104,7 @@ def get_dataset(config, logger):
                                   img_size=(config["data.img_w"], config["data.img_h"]))
         val_data_loader = DataLoader(val_dataset, batch_size=config["data.per_gpu_batch_size"],
                                      shuffle=False, drop_last=False, num_workers=0)
-                                     
+
         return train_data_loader, val_data_loader
 
     elif config["data.name"] == "TT":
@@ -117,12 +114,9 @@ def get_dataset(config, logger):
                                     root=config["data.training_set_path"],
                                     is_validation=False,
                                     img_size=(config["data.img_w"], config["data.img_h"]))
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-         
         train_data_loader = DataLoader(train_dataset, batch_size=config["data.per_gpu_batch_size"],
                                        drop_last=True, num_workers=0,
-                                       sampler=train_sampler)
-                                     
+                                       shuffle=True)
 
         val_dataset = NeRFDataset(config,
                                   logger,
@@ -131,7 +125,7 @@ def get_dataset(config, logger):
                                   img_size=(config["data.img_w"], config["data.img_h"]))
         val_data_loader = DataLoader(val_dataset, batch_size=config["data.per_gpu_batch_size"],
                                      shuffle=False, drop_last=False, num_workers=0)
-                                     
+
         return train_data_loader, val_data_loader
     else:
         raise NotImplementedError
