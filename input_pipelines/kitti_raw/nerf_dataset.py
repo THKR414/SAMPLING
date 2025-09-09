@@ -135,16 +135,20 @@ class NeRFDataset(data.Dataset):
         depth_path = filepath + '/' + filename
 
         depth = Image.open(depth_path)
+        if depth.mode != 'L':
+            depth = depth.convert('L')
+        depth_raw = self.img_transforms2(depth)
+        depth = self.img_transforms(depth)
+         
         img_src_size = img_src.size  
          
         img_tgt_size = img_tgt.size         
          
         img_raw = self.img_transforms2(img_src)
-        depth_raw = self.img_transforms2(depth)
         img_src = self.img_transforms(img_src)
          
         img_tgt = self.img_transforms(img_tgt)
-        depth = self.img_transforms(depth)
+        # depth = self.img_transforms(depth)
          
          
         src_num =2

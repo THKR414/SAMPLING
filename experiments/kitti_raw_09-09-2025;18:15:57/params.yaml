@@ -6,10 +6,10 @@ data.name: kitti_raw
 data.num_seq_per_gpu: 4
 data.num_tgt_views: 1
 data.num_workers: 4
-data.per_gpu_batch_size: 32
+data.per_gpu_batch_size: 4
 data.rotation_pi_ratio: 3
-data.training_set_path: /home/m_vcl/kitti_raw_depth/
-data.val_set_path: /home/m_vcl/kitti_raw_depth/
+data.training_set_path: /home/m_vcl/kitti_rawdata/
+data.val_set_path: /home/m_vcl/kitti_rawdata/
 data.visible_point_count: 256
 loss.smoothness_gmin: 2.0
 loss.smoothness_grad_ratio: 0.1

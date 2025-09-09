@@ -366,26 +366,40 @@ class SynthesisTask():
         loss_assign = 0
         disparity_coarse_src = _get_disparity_list(self.config, B, device=self.src_imgs.device)
 
-        disparity_coarse_src_ada = self.pan(disparity_coarse_src, F.interpolate(self.img.float(), scale_factor=0.25), F.interpolate(self.depth.float(), scale_factor=0.25))
+        # デバッグ用print文
+        print("self.img shape:", self.img.shape)
+        print("self.depth shape:", self.depth.shape)
+        print("disparity_coarse_src shape:", disparity_coarse_src.shape)
+
+        disparity_coarse_src_ada = self.pan(
+            disparity_coarse_src,
+            F.interpolate(self.img.float(), scale_factor=0.25),
+            F.interpolate(self.depth.float(), scale_factor=0.25)
+        )
+        # デバッグ用print文
+        print("disparity_coarse_src_ada shape:", disparity_coarse_src_ada.shape)
+
         mask = self.mnet(self.img, self.depth, disparity_coarse_src_ada)
+        # デバッグ用print文
+        print("mask shape:", mask.shape)
         _, S = disparity_coarse_src_ada.shape
-        loss_assign_matrix = torch.zeros(size=[B,S,H_img, W_img])
+        loss_assign_matrix = torch.zeros(size=[B, S, H_img, W_img])
         for i in range(B):
             for j in range(S):
                 if disparity_coarse_src_ada[i][j] >= 1:
                     disparity_coarse_src_ada[i][j] = 0.9999
-                if j != S -1:
+                if j != S - 1:
                     loss_rank += max(0, float(disparity_coarse_src_ada[i][j+1] - disparity_coarse_src_ada[i][j]))
                 disparity_per_element = torch.ones(size=[H_img, W_img]).cuda() * disparity_coarse_src_ada[i][j]
-                disparity_sub_depth =  self.depth[i,0,:,:]/80 - disparity_per_element
-                loss_assign_matrix[i,j] = torch.mul(mask[i][j], disparity_sub_depth.abs())
+                disparity_sub_depth = self.depth[i, 0, :, :] / 80 - disparity_per_element
+                loss_assign_matrix[i, j] = torch.mul(mask[i][j], disparity_sub_depth.abs())
         loss_assign = loss_assign_matrix.sum()
         loss_rank = 100 * loss_rank / (S - 1)
         loss_assign = 10 * loss_assign / (H_img * W_img)
         xyz_src_BS3HW_coarse = mpi_rendering.get_src_xyz_from_plane_disparity(
-                self.homography_sampler_list[0].meshgrid,
-                disparity_coarse_src_ada,
-                self.K_src_inv
+            self.homography_sampler_list[0].meshgrid,
+            disparity_coarse_src_ada,
+            self.K_src_inv
         )
 
          
