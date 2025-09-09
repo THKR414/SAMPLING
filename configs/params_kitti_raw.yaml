@@ -2,9 +2,9 @@ data.img_h: 128
 data.img_w: 384
 data.name: kitti_raw
 data.per_gpu_batch_size: 32
-data.training_set_path: /home/m_vcl/kitti_raw_depth/
+data.training_set_path: /home/m_vcl/kitti_rawdata/
  
-data.val_set_path: /home/m_vcl/kitti_raw_depth/
+data.val_set_path: /home/m_vcl/kitti_rawdata/
 lr.backbone_lr: 0.001
 lr.decay_gamma: 0.1
 lr.decay_steps: 40,80,100

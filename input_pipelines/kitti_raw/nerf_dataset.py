@@ -131,7 +131,8 @@ class NeRFDataset(data.Dataset):
          
         filepath = os.path.dirname(img_path_src)
          
-        depth_path = filepath + '/depth/' + filename
+        # depth_path = filepath + '/depth/' + filename
+        depth_path = filepath + '/' + filename
 
         depth = Image.open(depth_path)
         img_src_size = img_src.size  
@@ -224,11 +225,9 @@ class NeRFDataset(data.Dataset):
             seq_dir = os.path.join(self.root_dir, seq_date,
                                 '{}_sync'.format(seq_id))
             for root, _, filenames in os.walk(os.path.join(seq_dir, 'image_02')):
-                # if "depth" in root:
-                #     print("skip depth dir")
-                #     continue
+                if "depth" in root:
+                    continue
                 if "checkpoint" in root:
-                    # print("skip checkpoint dir")
                     continue
                 for filename in fnmatch.filter(filenames, '*.png'):
                      
@@ -238,8 +237,6 @@ class NeRFDataset(data.Dataset):
                     if exclude_img not in src_img_name:
                         self.img_list_src.append(os.path.join(src_img_name))
                         self.seq_id_list.append(seq_date)
-                        # print("add img:",src_img_name)
-
         self.img_list_trg = [
           f.replace('image_02', 'image_03') for f in self.img_list_src
          ]
@@ -281,7 +278,7 @@ class NeRFDataset(data.Dataset):
 if __name__ == "__main__":
     import logging
     dataset = NeRFDataset({}, logging,
-                          root="/home/m_vcl/kitti_raw_depth",
+                          root="/home/m_vcl/kitti_rawdata",
                           is_validation=True,
                           img_size=(384, 256))
                          
